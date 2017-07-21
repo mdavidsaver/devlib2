@@ -5,6 +5,7 @@
 
 @mainpage devLib2 MMIO Bus Access Library
 
+
 @section whatisit What is it?
 
 devLib2 is an extension to the EPICS OS independent VME bus access
@@ -80,7 +81,7 @@ definitions of standard registers, and functions to access them.
 
 The MMIO library provides an OS and CPU architecture independent way to
 safely access memory mapped I/O devices.  Makes guarantees of
-the width and order of accesses.
+@ref safemmio.
 
 @li @ref mmio "API Docmentation"
 

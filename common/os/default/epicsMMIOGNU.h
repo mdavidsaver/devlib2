@@ -7,12 +7,28 @@
 
 #include <epicsTypes.h>
 #include <epicsEndian.h>
-#include <compilerSpecific.h>
+#include <epicsVersion.h>
 #include <shareLib.h>
+
+#ifndef VERSION_INT
+#  define VERSION_INT(V,R,M,P) ( ((V)<<24) | ((R)<<16) | ((M)<<8) | (P))
+#  define EPICS_VERSION_INT VERSION_INT(EPICS_VERSION, EPICS_REVISION, EPICS_MODIFICATION, EPICS_PATCH_LEVEL)
+#endif
+
+#if EPICS_VERSION_INT>=VERSION_INT(3,15,0,2)
+#  define HAVE_MMIO64
+#endif
 
 #ifdef __cplusplus
 #  ifndef INLINE
 #    define INLINE inline
+#  endif
+#endif
+#ifndef EPICS_ALWAYS_INLINE
+#  if __GNUC__ > 2
+#    define EPICS_ALWAYS_INLINE __inline__ __attribute__((always_inline))
+#  else
+#    define EPICS_ALWAYS_INLINE __inline__
 #  endif
 #endif
 
@@ -39,7 +55,9 @@ static EPICS_ALWAYS_INLINE void PREFIX ## write##N(volatile void* addr, epicsUIn
 BUILD_MMIO(io,8)
 BUILD_MMIO(nat_io, 16)
 BUILD_MMIO(nat_io, 32)
+#ifdef HAVE_MMIO64
 BUILD_MMIO(nat_io, 64)
+#endif
 
 #undef BUILD_MMIO
 #undef MMIO_SYNC_INST
@@ -93,6 +111,7 @@ bswap32(epicsUInt32 value)
 #endif
 }
 
+#ifdef HAVE_MMIO64
 static EPICS_ALWAYS_INLINE
 epicsUInt64
 bswap64(epicsUInt64 value)
@@ -106,6 +125,7 @@ bswap64(epicsUInt64 value)
     return ret;
 #endif
 }
+#endif /* HAVE_MMIO64 */
 
 #if EPICS_BYTE_ORDER == EPICS_ENDIAN_BIG
 #  define be_ioread16(A)    nat_ioread16(A)
@@ -117,6 +137,14 @@ bswap64(epicsUInt64 value)
 #  define le_ioread32(A)    bswap32(nat_ioread32(A))
 #  define le_iowrite16(A,D) nat_iowrite16(A,bswap16(D))
 #  define le_iowrite32(A,D) nat_iowrite32(A,bswap32(D))
+
+#ifdef HAVE_MMIO64
+#  define be_ioread64(A)    nat_ioread64(A)
+#  define be_iowrite64(A,D) nat_iowrite64(A,D)
+
+#  define le_ioread64(A)    bswap64(nat_ioread64(A))
+#  define le_iowrite64(A,D) nat_iowrite64(A,bswap64(D))
+#endif
 
 /** @} */
 
@@ -130,6 +158,14 @@ bswap64(epicsUInt64 value)
 #  define le_ioread32(A)    nat_ioread32(A)
 #  define le_iowrite16(A,D) nat_iowrite16(A,D)
 #  define le_iowrite32(A,D) nat_iowrite32(A,D)
+
+#ifdef HAVE_MMIO64
+#  define be_ioread64(A)    bswap64(nat_ioread64(A))
+#  define be_iowrite64(A,D) nat_iowrite64(A,bswap64(D))
+
+#  define le_ioread64(A)    nat_ioread64(A)
+#  define le_iowrite64(A,D) nat_iowrite64(A,D)
+#endif
 
 #else
 #  error Unable to determine native byte order

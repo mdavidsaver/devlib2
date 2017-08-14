@@ -21,7 +21,10 @@
 #endif
 
 
-#if defined(_ARCH_PPC) || defined(__PPC__) || defined(__PPC)
+#if defined(__GNUC__)
+#  include "epicsMMIOGNU.h"
+
+#elif defined(_ARCH_PPC) || defined(__PPC__) || defined(__PPC)
 #  include <libcpu/io.h>
 
 /*NOTE: All READ/WRITE operations have an implicit read or write barrier */
